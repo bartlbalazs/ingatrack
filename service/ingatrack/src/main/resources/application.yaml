@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    database: POSTGRESQL
+    generate-ddl: true
+    hibernate.ddl-auto: create-drop
+  datasource:
+    platform: postgres
+    url: jdbc:postgresql://localhost:5432/ingatrack
+    username: ingatrack
+    password: ingatrack
