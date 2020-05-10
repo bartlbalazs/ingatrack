@@ -7,4 +7,5 @@ workflows:
   maven_test:
     jobs:
       - maven/test:
-          app_src_directory: '~/service/ingatrack'
+          app_src_directory: service/ingatrack-api
+          command: '-X verify'
