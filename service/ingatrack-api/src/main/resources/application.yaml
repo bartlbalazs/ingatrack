@@ -8,3 +8,5 @@ spring:
     url: jdbc:postgresql://localhost:5432/ingatrack
     username: ingatrack
     password: ingatrack
+application:
+  datasource-url: https://ingatlan.com
