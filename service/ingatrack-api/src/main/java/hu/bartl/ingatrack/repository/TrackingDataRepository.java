@@ -1,9 +1,11 @@
 package hu.bartl.ingatrack.repository;
 
-import com.google.api.services.bigquery.model.TableRow;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.InsertAllRequest;
+import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import hu.bartl.ingatrack.config.BigQueryConfig;
 import hu.bartl.ingatrack.entity.TrackingData;
@@ -26,34 +28,22 @@ public class TrackingDataRepository {
 
     private final BigQueryConfig bigQueryConfig;
     private final BigQuery bigquery;
+    private final ObjectMapper objectMapper;
+
+    private static final TypeReference MAP_TYPE = new TypeReference<Map<String, Object>>() {
+    };
+
 
     public void save(TrackingData trackingData) {
         log.info("Storing tracking data to BigQuery: {}", trackingData);
 
-        var row = new TableRow();
-        row.put(Fields.id, trackingData.getId());
-        row.put(Fields.active, trackingData.isActive());
-        row.put(Fields.createdAt, trackingData.getCreatedAt());
-        row.put(Fields.price, trackingData.getPrice());
-        row.put(Fields.property, trackingData.getProperty());
+        Map<String, Object> trackingDataMap = (Map<String, Object>) objectMapper.convertValue(trackingData, MAP_TYPE);
+        var response = bigquery.insertAll(InsertAllRequest.of(
+                bigQueryConfig.getDatasetName(),
+                BigQueryConfig.TrackingTable.NAME,
+                RowToInsert.of(trackingDataMap))
+        );
 
-        var response = bigquery.insertAll(InsertAllRequest.of(bigQueryConfig.getDatasetName(), BigQueryConfig.TrackingTable.NAME,
-                InsertAllRequest.RowToInsert.of(Map.of(
-                        Fields.id, trackingData.getId(),
-                        Fields.active, trackingData.isActive(),
-                        Fields.createdAt, trackingData.getCreatedAt().toString(),
-
-                        Fields.price, trackingData.getPrice(),
-                        Fields.property, Map.of(
-                                Property.Fields.propertyId, trackingData.getProperty().getPropertyId(),
-                                Property.Fields.city, trackingData.getProperty().getCity(),
-                                Property.Fields.squareMeters, trackingData.getProperty().getSquareMeters(),
-                                Property.Fields.builtAfter, trackingData.getProperty().getBuiltAfter(),
-                                Property.Fields.builtBefore, trackingData.getProperty().getBuiltBefore(),
-                                Property.Fields.panel, trackingData.getProperty().isPanel()
-                        )
-                ))
-        ));
         if (!CollectionUtils.isEmpty(response.getInsertErrors())) {
             log.error("Failed to insert tracking data: {}. Error: {}", trackingData, response.getInsertErrors());
         }
@@ -77,11 +67,11 @@ public class TrackingDataRepository {
                     .createdAt(Timestamp.ofTimeMicroseconds(trackingDataRow.get(Fields.createdAt).getTimestampValue()))
                     .property(Property.builder()
                             .propertyId(propertyRow.get(Property.Fields.propertyId).getLongValue())
-                            .city(propertyRow.get(Property.Fields.city).getStringValue())
-                            .builtAfter(Math.toIntExact(propertyRow.get(Property.Fields.builtAfter).getLongValue()))
-                            .builtBefore(Math.toIntExact(propertyRow.get(Property.Fields.builtBefore).getLongValue()))
-                            .squareMeters(Math.toIntExact(propertyRow.get(Property.Fields.squareMeters).getLongValue()))
-                            .panel(propertyRow.get(Property.Fields.panel).getBooleanValue())
+                            .city(!propertyRow.get(Property.Fields.city).isNull() ? propertyRow.get(Property.Fields.city).getStringValue() : null)
+                            .builtAfter(!propertyRow.get(Property.Fields.builtAfter).isNull() ? Math.toIntExact(propertyRow.get(Property.Fields.builtAfter).getLongValue()) : null)
+                            .builtBefore(!propertyRow.get(Property.Fields.builtBefore).isNull() ? Math.toIntExact(propertyRow.get(Property.Fields.builtBefore).getLongValue()) : null)
+                            .squareMeters(!propertyRow.get(Property.Fields.squareMeters).isNull() ? Math.toIntExact(propertyRow.get(Property.Fields.squareMeters).getLongValue()) : null)
+                            .panel(!propertyRow.get(Property.Fields.panel).isNull() ? propertyRow.get(Property.Fields.panel).getBooleanValue() : null)
                             .build())
                     .build();
             return Optional.of(trackingData);
