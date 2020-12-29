@@ -12,6 +12,8 @@ import org.springframework.data.annotation.Id;
 
 import java.util.UUID;
 
+import static hu.bartl.ingatrack.config.ObjectMapperConfig.TIMESTAMP_FORMAT;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,6 +28,6 @@ public class PropertySubscription {
     @Default
     private boolean active = true;
     @Default
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-ddTHH:mm:ss.SSSSSSSSSZ")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TIMESTAMP_FORMAT)
     private Timestamp createdAt = Timestamp.now();
 }

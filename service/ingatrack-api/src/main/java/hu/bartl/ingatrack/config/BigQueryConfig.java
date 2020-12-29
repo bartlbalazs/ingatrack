@@ -30,9 +30,10 @@ public class BigQueryConfig {
                         Field.of(Property.Fields.builtBefore, StandardSQLTypeName.INT64),
                         Field.of(Property.Fields.panel, StandardSQLTypeName.BOOL)
                 ),
-                Field.of(TrackingData.Fields.createdAt, StandardSQLTypeName.TIMESTAMP),
                 Field.of(TrackingData.Fields.price, StandardSQLTypeName.INT64),
-                Field.of(TrackingData.Fields.active, StandardSQLTypeName.BOOL)
+                Field.of(TrackingData.Fields.active, StandardSQLTypeName.BOOL),
+                Field.of(TrackingData.Fields.createdAt, StandardSQLTypeName.TIMESTAMP),
+                Field.of(TrackingData.Fields.insertedBy, StandardSQLTypeName.STRING)
         );
     }
 }

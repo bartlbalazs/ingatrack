@@ -16,6 +16,8 @@ import java.io.IOException;
 @AllArgsConstructor
 public class ObjectMapperConfig {
 
+    public static final String TIMESTAMP_FORMAT = "yyyy-MM-ddTHH:mm:ss.SSSSSSSSSZ";
+
     private final ObjectMapper objectMapper;
 
     @PostConstruct

@@ -22,10 +22,11 @@ public class TrackingData {
     private String id = UUID.randomUUID().toString();
     @Default
     private Property property = Property.builder().build();
-    private Timestamp createdAt;
     private long price;
     @Default
     private boolean active = false;
+    private Timestamp createdAt;
+    private String insertedBy;
 
     @Override
     public boolean equals(Object o) {
