@@ -1,13 +1,12 @@
 package hu.bartl.ingatrack.component;
 
+import com.google.cloud.Timestamp;
 import org.springframework.stereotype.Component;
-
-import java.time.Instant;
 
 @Component
 public class DateProvider {
 
-    public Instant now() {
-        return Instant.now();
+    public Timestamp now() {
+        return Timestamp.now();
     }
 }

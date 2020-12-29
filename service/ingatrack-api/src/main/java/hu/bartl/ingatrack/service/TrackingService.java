@@ -1,11 +1,9 @@
-package hu.bartl.ingatrack;
+package hu.bartl.ingatrack.service;
 
-import com.google.common.collect.Sets;
 import hu.bartl.ingatrack.component.DateProvider;
 import hu.bartl.ingatrack.config.ApplicationConfig;
-import hu.bartl.ingatrack.entity.Property;
 import hu.bartl.ingatrack.entity.TrackingData;
-import hu.bartl.ingatrack.repository.PropertyRepository;
+import hu.bartl.ingatrack.repository.TrackingDataRepository;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -20,37 +18,32 @@ import static org.jsoup.Connection.Method.GET;
 @Slf4j
 public class TrackingService {
 
-    private final PropertyRepository propertyRepository;
+    private final TrackingDataRepository trackingDataRepository;
     private final ApplicationConfig applicationConfig;
     private final DateProvider dateProvider;
 
 
     @SneakyThrows
-    public void trackProperty(int propertyId) {
-        var property = loadProperty(propertyId);
-        var trackingData = TrackingData.builder().active(false).createdAt(dateProvider.now()).property(property).build();
+    public void trackProperty(long propertyId) {
+        var trackingData = TrackingData.create(propertyId, dateProvider.now());
         try {
             var connection = Jsoup.connect(applicationConfig.getDatasourceUrl() + "/" + propertyId).method(GET);
             String html = new String(connection.execute().bodyAsBytes(), "ISO-8859-1");
             var propertyPage = Jsoup.parse(html);
 
+            var property = trackingData.getProperty();
             property.setCity(getCity(propertyPage));
-            property.setSquareFootage(getSquareFootage(propertyPage));
+            property.setSquareMeters(getSquareMeters(propertyPage));
             property.setBuiltAfter(getBuiltAfter(propertyPage));
             property.setBuiltBefore(getBuiltBefore(propertyPage));
             property.setPanel(isPanel(propertyPage));
+
             trackingData.setPrice(getPrice(propertyPage));
             trackingData.setActive(true);
         } catch (Exception e) {
             log.warn("Failed to parse tracking data for property {}. Reson: {}", propertyId, e);
         }
-        property.getTrackingData().add(trackingData);
-        propertyRepository.save(property);
-    }
-
-    private Property loadProperty(int propertyId) {
-        return propertyRepository.findByPropertyId(propertyId)
-                .orElse(Property.builder().propertyId(propertyId).trackingData(Sets.newHashSet()).build());
+        trackingDataRepository.save(trackingData);
     }
 
     private String getCity(Document propertyPage) {
@@ -58,7 +51,7 @@ public class TrackingService {
         return title.ownText().split(",")[0];
     }
 
-    private int getSquareFootage(Document propertyPage) {
+    private int getSquareMeters(Document propertyPage) {
         var squareFootage = propertyPage.getElementsByClass("parameter parameter-area-size").first().child(1);
         return Integer.valueOf(squareFootage.ownText().split(" ")[0]);
     }

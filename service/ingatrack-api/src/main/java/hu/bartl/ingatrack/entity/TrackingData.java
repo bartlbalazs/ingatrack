@@ -1,15 +1,13 @@
 package hu.bartl.ingatrack.entity;
 
+import com.google.cloud.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -17,17 +15,17 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
+@FieldNameConstants
 public class TrackingData {
 
-    @Id
     @Default
     private String id = UUID.randomUUID().toString();
-    @ManyToOne
-    private Property property;
-    private Instant createdAt;
-    private int price;
-    private boolean active;
+    @Default
+    private Property property = Property.builder().build();
+    private Timestamp createdAt;
+    private long price;
+    @Default
+    private boolean active = false;
 
     @Override
     public boolean equals(Object o) {
@@ -46,7 +44,6 @@ public class TrackingData {
     public int hashCode() {
         int result = id.hashCode();
         result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
-        result = 31 * result + price;
         result = 31 * result + (active ? 1 : 0);
         return result;
     }
@@ -60,5 +57,27 @@ public class TrackingData {
                 ", price=" + price +
                 ", active=" + active +
                 '}';
+    }
+
+    public static TrackingData create(long propertyId, Timestamp createdAt) {
+        return TrackingData.builder()
+                .property(Property.builder().propertyId(propertyId).build())
+                .createdAt(createdAt)
+                .build();
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @FieldNameConstants
+    public static class Property {
+
+        private long propertyId;
+        private String city;
+        private int squareMeters;
+        private Integer builtAfter;
+        private Integer builtBefore;
+        private boolean panel;
     }
 }

@@ -7,6 +7,7 @@ import hu.bartl.ingatrack.entity.subscription.SearchSubscription;
 import hu.bartl.ingatrack.repository.PropertySubscriptionRepository;
 import hu.bartl.ingatrack.repository.SearchSubscriptionRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,14 +18,14 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @RestController
-@RequestMapping("/api/v1/subscription")
+@RequestMapping(value = "/api/v1/subscription", produces = MediaType.APPLICATION_JSON_VALUE)
 @AllArgsConstructor
 public class SubscriptionController {
 
     private final PropertySubscriptionRepository propertySubscriptionRepository;
     private final SearchSubscriptionRepository searchSubscriptionRepository;
 
-    @PostMapping("property")
+    @PostMapping(value = "property")
     public void subscribeToProperty(PropertySubscriptionRequest request) {
         PropertySubscription subscription = PropertySubscription.builder().propertyId(request.getId()).build();
         propertySubscriptionRepository.save(subscription);

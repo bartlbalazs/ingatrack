@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    gcp:
+      datastore:
+        namespace: ingatrack-test
+      bigquery:
+        datasetName: ingatrack_test

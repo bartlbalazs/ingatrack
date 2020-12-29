@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class PropertySubscriptionRequest {
-    private int id;
+    private long id;
 }

@@ -1,8 +1,9 @@
 package hu.bartl.ingatrack.config;
 
-import hu.bartl.ingatrack.TrackingService;
+import com.google.cloud.Timestamp;
 import hu.bartl.ingatrack.component.DateProvider;
-import hu.bartl.ingatrack.repository.PropertyRepository;
+import hu.bartl.ingatrack.repository.TrackingDataRepository;
+import hu.bartl.ingatrack.service.TrackingService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,11 +18,10 @@ import org.springframework.http.HttpMethod;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
@@ -35,7 +35,7 @@ class TrackingServiceConfigTest {
     static ClientAndServer mockServer;
 
     @Autowired
-    PropertyRepository propertyRepository;
+    TrackingDataRepository trackingDataRepository;
     @MockBean
     DateProvider dateProvider;
 
@@ -50,9 +50,12 @@ class TrackingServiceConfigTest {
     @Test
     @SneakyThrows
     void testFetchTrackingDataForProperty() {
-        var propertyId = 30977395;
+        var propertyId = 30977395L;
         var sampleFile = new ClassPathResource("sample/" + propertyId + ".html").getFile();
         var sample = Files.readAllLines(Paths.get(sampleFile.getAbsolutePath())).stream().collect(Collectors.joining());
+
+        var currentTimestamp = Timestamp.now();
+        when(dateProvider.now()).thenReturn(currentTimestamp);
 
         mockServer.when(
                 request().withMethod(HttpMethod.GET.name())
@@ -61,22 +64,18 @@ class TrackingServiceConfigTest {
                         .withStatusCode(HttpStatusCode.OK_200.code())
                         .withBody(sample));
 
-        when(dateProvider.now()).thenReturn(Instant.ofEpochSecond(1));
-
         underTest.trackProperty(propertyId);
 
-        var property = propertyRepository.findByPropertyId(propertyId).get();
+        var trackingData = trackingDataRepository.findLatestByPropertyId(propertyId).get();
+        assertEquals(currentTimestamp, trackingData.getCreatedAt());
+
+        var property = trackingData.getProperty();
         assertThat(property.getPropertyId(), is(propertyId));
         assertThat(property.getCity(), is("Szeged"));
         assertThat(property.getBuiltAfter(), is(1981));
         assertThat(property.getBuiltBefore(), is(2000));
-        assertThat(property.getSquareFootage(), is(72));
+        assertThat(property.getSquareMeters(), is(72));
         assertThat(property.isPanel(), is(true));
-
-        assertThat(property.getTrackingData().size(), is(1));
-        assertThat(new ArrayList<>(property.getTrackingData()).get(0).isActive(), is(true));
-        assertThat(new ArrayList<>(property.getTrackingData()).get(0).getCreatedAt(), is(dateProvider.now()));
-        assertThat(new ArrayList<>(property.getTrackingData()).get(0).getPrice(), is(19900000));
     }
 
     @AfterAll

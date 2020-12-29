@@ -1,11 +1,18 @@
 version: 2.1
 
-orbs:
-  maven: circleci/maven@1.0.1
+jobs:
+  build:
+    docker:
+      - image: google/cloud-sdk
+    steps:
+      - checkout
+      - run: |
+          echo $SA > /sa.json
+          cd service/ingatrack-api/ && ./mvnw -X verify
+      - store_test_results:
+          path: service/ingatrack-api/target/surefire-reports
 
 workflows:
   maven_test:
     jobs:
-      - maven/test:
-          app_src_directory: service/ingatrack-api
-          command: '-X verify'
+      - build
