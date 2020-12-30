@@ -32,12 +32,14 @@ public class TrackingService {
 
     @SneakyThrows
     public void trackProperty(long propertyId, String requestSource) {
+        log.info("Tracking property " + propertyId + " initiated by subscription: " + requestSource);
         var trackingData = fetchTrackingData(propertyId);
         trackingData.setInsertedBy(requestSource);
         trackingDataRepository.save(trackingData);
     }
 
     public void trackSearch(String query, String requestSource) {
+        log.info("Tracking query " + query + " initiated by subscription: " + requestSource);
         var trackingData = fetchPropertyIds(query)
                 .stream()
                 .map(this::fetchTrackingData)
@@ -48,6 +50,7 @@ public class TrackingService {
 
     @SneakyThrows
     public TrackingData fetchTrackingData(long propertyId) {
+        log.info("Fetching tracking data for property with ID: " + propertyId);
         var htmlPage = Jsoup.connect(applicationConfig.getDatasourceUrl() + "/" + propertyId).method(GET).ignoreHttpErrors(true).execute();
         if (htmlPage.statusCode() == HttpStatus.OK.value()) {
             String html = new String(htmlPage.bodyAsBytes(), UTF_8.name());
@@ -59,6 +62,7 @@ public class TrackingService {
 
     @SneakyThrows
     public List<Long> fetchPropertyIds(String query) {
+        log.info("Fetching property IDs from query: " + query);
         List<Long> result = Lists.newArrayList();
 
         var htmlPage = Jsoup.connect(applicationConfig.getDatasourceUrl() + "/lista/" + query + "?page=1").method(GET).execute();
