@@ -55,7 +55,7 @@ public class SubscriptionRepository {
 
     @SneakyThrows
     public Optional<PropertySubscription> findPropertySubscription(long propertyId) {
-        var queryTemplate = "SELECT * EXCEPT(query, type) FROM `${dataset}.${table}` where ${propertyIdColumn} = ${propertyId}";
+        var queryTemplate = "SELECT * FROM `${dataset}.${table}` where ${propertyIdColumn} = ${propertyId}";
         var query = StringSubstitutor.replace(queryTemplate, Map.of(
                 "dataset", bigQueryConfig.getDatasetName(),
                 "table", BigQueryConfig.PropertySubscriptionView.NAME,
