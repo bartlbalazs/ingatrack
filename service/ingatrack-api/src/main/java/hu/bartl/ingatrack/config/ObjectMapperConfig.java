@@ -27,7 +27,7 @@ public class ObjectMapperConfig {
         objectMapper.registerModule(module);
     }
 
-    public class TimestampSerializer extends StdSerializer<Timestamp> {
+    public static class TimestampSerializer extends StdSerializer<Timestamp> {
 
         public TimestampSerializer() {
             this(null);

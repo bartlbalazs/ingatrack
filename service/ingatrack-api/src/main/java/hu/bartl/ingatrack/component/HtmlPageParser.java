@@ -47,7 +47,7 @@ public class HtmlPageParser {
 
     private int getSquareMeters(Document propertyPage) {
         var squareFootage = propertyPage.getElementsByClass("parameter parameter-area-size").first().child(1);
-        return Integer.valueOf(squareFootage.ownText().split(" ")[0]);
+        return Integer.parseInt(squareFootage.ownText().split(" ")[0]);
     }
 
     private Integer getBuiltAfter(Document propertyPage) {
@@ -60,7 +60,7 @@ public class HtmlPageParser {
 
     private Integer getYearOfBuilt(Document propertyPage, int order) {
         var select = propertyPage.select("td:contains(Építés éve)");
-        if (select.size() == 0) {
+        if (select.isEmpty()) {
             return null;
         }
         var yearsOfBuilt = select.first().parent().child(1).text();
@@ -74,7 +74,7 @@ public class HtmlPageParser {
 
     private int getPrice(Document propertyPage) {
         var squareMeters = propertyPage.getElementsByClass("parameter parameter-price").first().child(1);
-        float priceInMillions = Float.valueOf(squareMeters.ownText().replace(",", ".").split(" ")[0]);
+        float priceInMillions = Float.parseFloat(squareMeters.ownText().replace(",", ".").split(" ")[0]);
         return Math.round(priceInMillions * 1000000);
     }
 
@@ -86,8 +86,8 @@ public class HtmlPageParser {
         var dataLayer = objectMapper.readValue(dataLayerJson, Map.class);
         return PageResult.builder()
                 .properties(((List<Integer>) dataLayer.get("itemId")).stream().map(Long::valueOf).collect(Collectors.toList()))
-                .hasNext(Integer.valueOf(dataLayer.get("numberOfItems").toString()) == DEFAULT_PAGE_SIZE)
-                .nextPage(Integer.valueOf(dataLayer.get("page").toString()) + 1)
+                .hasNext(Integer.parseInt(dataLayer.get("numberOfItems").toString()) == DEFAULT_PAGE_SIZE)
+                .nextPage(Integer.parseInt(dataLayer.get("page").toString()) + 1)
                 .build();
     }
 

@@ -16,14 +16,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.jsoup.Connection.Method.GET;
 
 @Service
 @AllArgsConstructor
 @Slf4j
 public class TrackingService {
-
-    private static final String ISO_8859_1 = "ISO-8859-1";
 
     private final TrackingDataRepository trackingDataRepository;
     private final ApplicationConfig applicationConfig;
@@ -38,12 +37,12 @@ public class TrackingService {
         trackingDataRepository.save(trackingData);
     }
 
-    public void trackSearch(String query) {
+    public void trackSearch(String query, String requestSource) {
         var trackingData = fetchPropertyIds(query)
                 .stream()
                 .map(this::fetchTrackingData)
                 .collect(Collectors.toList());
-        trackingData.forEach(t -> t.setInsertedBy(query));
+        trackingData.forEach(t -> t.setInsertedBy(requestSource));
         trackingDataRepository.save(trackingData);
     }
 
@@ -51,7 +50,7 @@ public class TrackingService {
     public TrackingData fetchTrackingData(long propertyId) {
         var htmlPage = Jsoup.connect(applicationConfig.getDatasourceUrl() + "/" + propertyId).method(GET).ignoreHttpErrors(true).execute();
         if (htmlPage.statusCode() == HttpStatus.OK.value()) {
-            String html = new String(htmlPage.bodyAsBytes(), ISO_8859_1);
+            String html = new String(htmlPage.bodyAsBytes(), UTF_8.name());
             return htmlPageParser.parsePropertyPage(propertyId, html);
         } else {
             return TrackingData.create(propertyId, dateProvider.now());
@@ -63,12 +62,12 @@ public class TrackingService {
         List<Long> result = Lists.newArrayList();
 
         var htmlPage = Jsoup.connect(applicationConfig.getDatasourceUrl() + "/lista/" + query + "?page=1").method(GET).execute();
-        var page = htmlPageParser.parseSearchPage(new String(htmlPage.bodyAsBytes(), ISO_8859_1));
+        var page = htmlPageParser.parseSearchPage(new String(htmlPage.bodyAsBytes(), UTF_8.name()));
         result.addAll(page.getProperties());
 
         while (page.hasNext()) {
             htmlPage = Jsoup.connect(applicationConfig.getDatasourceUrl() + "/lista/" + query + "?page=" + page.getNextPage()).method(GET).execute();
-            page = htmlPageParser.parseSearchPage(new String(htmlPage.bodyAsBytes(), ISO_8859_1));
+            page = htmlPageParser.parseSearchPage(new String(htmlPage.bodyAsBytes(), UTF_8.name()));
             result.addAll(page.getProperties());
         }
 

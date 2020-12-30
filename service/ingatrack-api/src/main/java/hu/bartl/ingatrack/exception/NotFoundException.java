@@ -4,13 +4,15 @@ import lombok.ToString;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.Serializable;
+
 @ResponseStatus(code = HttpStatus.NOT_FOUND)
 @ToString
 public class NotFoundException extends RuntimeException {
 
-    private Object id;
+    private final Serializable id;
 
-    public NotFoundException(Object id) {
+    public NotFoundException(Serializable id) {
         super("Entity with id " + id + " not found.");
         this.id = id;
     }

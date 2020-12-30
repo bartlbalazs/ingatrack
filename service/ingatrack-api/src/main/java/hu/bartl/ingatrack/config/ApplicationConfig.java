@@ -10,4 +10,5 @@ import org.springframework.stereotype.Component;
 public class ApplicationConfig {
 
     private String datasourceUrl;
+    private boolean doJobOnStart;
 }

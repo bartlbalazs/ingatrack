@@ -28,13 +28,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TrackingDataRepository {
 
+    private static final TypeReference MAP_TYPE = new TypeReference<Map<String, Object>>() {
+    };
     private final BigQueryConfig bigQueryConfig;
     private final BigQuery bigquery;
     private final ObjectMapper objectMapper;
-
-    private static final TypeReference MAP_TYPE = new TypeReference<Map<String, Object>>() {
-    };
-
 
     public void save(TrackingData trackingData) {
         log.info("Storing tracking data to BigQuery: {}", trackingData);

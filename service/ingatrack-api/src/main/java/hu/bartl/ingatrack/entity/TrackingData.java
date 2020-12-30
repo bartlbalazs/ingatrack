@@ -34,15 +34,6 @@ public class TrackingData {
                 .build();
     }
 
-    public static TrackingData createWithRequestSource(long propertyId, Timestamp createdAt, String requestSource) {
-        return TrackingData.builder()
-                .property(Property.builder().propertyId(propertyId).build())
-                .createdAt(createdAt)
-                .insertedBy(requestSource)
-                .build();
-    }
-
-
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

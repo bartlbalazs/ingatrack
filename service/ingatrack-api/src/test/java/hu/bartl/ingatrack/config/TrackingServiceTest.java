@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,6 +47,7 @@ class TrackingServiceTest {
 
     @Autowired
     TrackingDataRepository trackingDataRepository;
+
     @MockBean
     DateProvider dateProvider;
 
@@ -112,7 +114,7 @@ class TrackingServiceTest {
         prepareMockServerForProperty(31551453, HttpStatusCode.OK_200);
         prepareMockServerForProperty(31850378, HttpStatusCode.OK_200);
 
-        underTest.trackSearch(query);
+        underTest.trackSearch(query, "TEST");
 
         var t1 = trackingDataRepository.findLatestByPropertyId(22399987).get();
         assertEquals(CURRENT_TIMESTAMP, t1.getCreatedAt());
@@ -151,7 +153,7 @@ class TrackingServiceTest {
                 httpRequest)
                 .respond(response()
                         .withStatusCode(statusCode.code())
-                        .withBody(sample));
+                        .withBody(sample, UTF_8));
 
     }
 
