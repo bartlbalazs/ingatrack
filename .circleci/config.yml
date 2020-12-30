@@ -6,9 +6,11 @@ jobs:
       - image: google/cloud-sdk
     steps:
       - checkout
-      - run: |
-          echo $SA > /sa.json
-          cd service/ingatrack-api/ && ./mvnw -X verify
+      - run:
+          name: Run tests
+          command: |
+            echo $SA > /sa.json
+            cd service/ingatrack-api/ && ./mvnw -X verify
       - store_test_results:
           path: service/ingatrack-api/target/surefire-reports
 
