@@ -18,8 +18,10 @@ import org.apache.commons.text.StringSubstitutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @AllArgsConstructor
@@ -37,7 +39,7 @@ public class TrackingDataRepository {
     public void save(TrackingData trackingData) {
         log.info("Storing tracking data to BigQuery: {}", trackingData);
 
-        Map<String, Object> trackingDataMap = (Map<String, Object>) objectMapper.convertValue(trackingData, MAP_TYPE);
+        Map<String, Object> trackingDataMap = convertToMap(trackingData);
         var response = bigquery.insertAll(InsertAllRequest.of(
                 bigQueryConfig.getDatasetName(),
                 BigQueryConfig.TrackingTable.NAME,
@@ -47,6 +49,29 @@ public class TrackingDataRepository {
         if (!CollectionUtils.isEmpty(response.getInsertErrors())) {
             log.error("Failed to insert tracking data: {}. Error: {}", trackingData, response.getInsertErrors());
         }
+    }
+
+    public void save(List<TrackingData> trackingData) {
+        log.info("Storing tracking data to BigQuery: {}", trackingData);
+
+        var rowsToInsert = trackingData.stream()
+                .map(this::convertToMap)
+                .map(RowToInsert::of)
+                .collect(Collectors.toList());
+
+        var response = bigquery.insertAll(InsertAllRequest.of(
+                bigQueryConfig.getDatasetName(),
+                BigQueryConfig.TrackingTable.NAME,
+                rowsToInsert)
+        );
+
+        if (!CollectionUtils.isEmpty(response.getInsertErrors())) {
+            log.error("Failed to insert tracking data: {}. Error: {}", trackingData, response.getInsertErrors());
+        }
+    }
+
+    private Map<String, Object> convertToMap(TrackingData trackingData) {
+        return (Map<String, Object>) objectMapper.convertValue(trackingData, MAP_TYPE);
     }
 
     @SneakyThrows

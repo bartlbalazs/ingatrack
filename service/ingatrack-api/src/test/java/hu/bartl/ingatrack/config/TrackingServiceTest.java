@@ -6,11 +6,13 @@ import hu.bartl.ingatrack.repository.TrackingDataRepository;
 import hu.bartl.ingatrack.service.TrackingService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -50,7 +52,6 @@ class TrackingServiceTest {
     @Autowired
     TrackingService underTest;
 
-
     @BeforeAll
     static void beforeAll() {
         mockServer = startClientAndServer(8081);
@@ -66,7 +67,7 @@ class TrackingServiceTest {
     void shouldTrackPropertyWithActiveAdvertisement() {
         var propertyId = 30977395L;
 
-        prepareMockServer(propertyId, HttpStatusCode.OK_200);
+        prepareMockServerForProperty(propertyId, HttpStatusCode.OK_200);
 
         underTest.trackProperty(propertyId, REQUEST_SOURCE);
 
@@ -88,7 +89,7 @@ class TrackingServiceTest {
     void shouldTrackPropertyWithInactiveAdvertisement() {
         var propertyId = 318110356L;
 
-        prepareMockServer(propertyId, HttpStatusCode.NOT_FOUND_404);
+        prepareMockServerForProperty(propertyId, HttpStatusCode.NOT_FOUND_404);
 
         underTest.trackProperty(propertyId, REQUEST_SOURCE);
 
@@ -99,17 +100,64 @@ class TrackingServiceTest {
         assertEquals(CURRENT_TIMESTAMP, trackingData.getCreatedAt());
     }
 
+    @Test
     @SneakyThrows
-    private void prepareMockServer(long propertyId, HttpStatusCode statusCode) {
-        var sampleFile = new ClassPathResource("sample/" + propertyId + ".html").getFile();
+    void shouldTrackPropertiesOfSearchSubscription() {
+        var query = "sample-query";
+
+        prepareMockServerForSearch(query, 1);
+        prepareMockServerForSearch(query, 2);
+
+        prepareMockServerForProperty(22399987, HttpStatusCode.OK_200);
+        prepareMockServerForProperty(31551453, HttpStatusCode.OK_200);
+        prepareMockServerForProperty(31850378, HttpStatusCode.OK_200);
+
+        underTest.trackSearch(query);
+
+        var t1 = trackingDataRepository.findLatestByPropertyId(22399987).get();
+        assertEquals(CURRENT_TIMESTAMP, t1.getCreatedAt());
+        var t2 = trackingDataRepository.findLatestByPropertyId(31551453).get();
+        assertEquals(CURRENT_TIMESTAMP, t2.getCreatedAt());
+        var t3 = trackingDataRepository.findLatestByPropertyId(31850378).get();
+        assertEquals(CURRENT_TIMESTAMP, t3.getCreatedAt());
+    }
+
+    @SneakyThrows
+    private void prepareMockServerForProperty(long propertyId, HttpStatusCode statusCode) {
+        prepareMockServer(propertyId, "", statusCode, null);
+    }
+
+    @SneakyThrows
+    private void prepareMockServerForSearch(String query, int page) {
+        prepareMockServer(query, "lista/", HttpStatusCode.OK_200, Parameter.param("page", String.valueOf(page)));
+    }
+
+    @SneakyThrows
+    private void prepareMockServer(Object sampleId, String context, HttpStatusCode statusCode, Parameter parameter) {
+        var path = "sample/" + sampleId;
+        if (parameter != null) {
+            path += "?" + parameter.getName().getValue() + "=" + parameter.getValues().get(0).getValue();
+        }
+        var sampleFile = new ClassPathResource(path + ".html").getFile();
         var sample = Files.readAllLines(Paths.get(sampleFile.getAbsolutePath())).stream().collect(Collectors.joining());
 
+        var httpRequest = request()
+                .withMethod(HttpMethod.GET.name())
+                .withPath("/" + context + sampleId);
+        if (parameter != null) {
+            httpRequest = httpRequest.withQueryStringParameter(parameter);
+        }
         mockServer.when(
-                request().withMethod(HttpMethod.GET.name())
-                        .withPath("/" + propertyId))
+                httpRequest)
                 .respond(response()
                         .withStatusCode(statusCode.code())
                         .withBody(sample));
+
+    }
+
+    @AfterEach
+    void afterEach() {
+        mockServer.reset();
     }
 
     @AfterAll

@@ -1,17 +1,27 @@
 package hu.bartl.ingatrack.component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.bartl.ingatrack.entity.TrackingData;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @AllArgsConstructor
 @Slf4j
 public class HtmlPageParser {
 
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private final ObjectMapper objectMapper;
     private final DateProvider dateProvider;
 
     public TrackingData parsePropertyPage(long propertyId, String propertyPageHtml) {
@@ -63,8 +73,33 @@ public class HtmlPageParser {
     }
 
     private int getPrice(Document propertyPage) {
-        var squareFootage = propertyPage.getElementsByClass("parameter parameter-price").first().child(1);
-        float priceInMillions = Float.valueOf(squareFootage.ownText().replace(",",".").split(" ")[0]);
+        var squareMeters = propertyPage.getElementsByClass("parameter parameter-price").first().child(1);
+        float priceInMillions = Float.valueOf(squareMeters.ownText().replace(",", ".").split(" ")[0]);
         return Math.round(priceInMillions * 1000000);
+    }
+
+    @SneakyThrows
+    public PageResult parseSearchPage(String htmlPage) {
+        var searchPage = Jsoup.parse(htmlPage);
+        var dataLayerScript = searchPage.getElementsByTag("script").get(2).data().trim();
+        var dataLayerJson = dataLayerScript.substring("dataLayer.push(".length(), dataLayerScript.length() - ");".length());
+        var dataLayer = objectMapper.readValue(dataLayerJson, Map.class);
+        return PageResult.builder()
+                .properties(((List<Integer>) dataLayer.get("itemId")).stream().map(Long::valueOf).collect(Collectors.toList()))
+                .hasNext(Integer.valueOf(dataLayer.get("numberOfItems").toString()) == DEFAULT_PAGE_SIZE)
+                .nextPage(Integer.valueOf(dataLayer.get("page").toString()) + 1)
+                .build();
+    }
+
+    @Data
+    @Builder
+    public static class PageResult {
+        private List<Long> properties;
+        private boolean hasNext;
+        private Integer nextPage;
+
+        public boolean hasNext() {
+            return this.hasNext;
+        }
     }
 }
