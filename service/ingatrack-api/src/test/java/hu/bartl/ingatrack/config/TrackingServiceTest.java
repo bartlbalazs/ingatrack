@@ -27,7 +27,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -75,15 +74,21 @@ class TrackingServiceTest {
 
         var trackingData = trackingDataRepository.findLatestByPropertyId(propertyId).get();
         assertTrue(trackingData.isActive());
-        assertEquals(CURRENT_TIMESTAMP, trackingData.getCreatedAt());
+        assertThat(trackingData.getListingType(), is("Eladó"));
+        assertThat(trackingData.getCreatedAt(), is(CURRENT_TIMESTAMP));
 
         var property = trackingData.getProperty();
         assertThat(property.getPropertyId(), is(propertyId));
+        assertThat(property.getPropertyType(), is("lakás"));
+        assertThat(property.getPropertySubType(), is("panel"));
+        assertThat(property.getCounty(), is("Csongrád"));
         assertThat(property.getCity(), is("Szeged"));
+        assertThat(property.getZone(), is("Szeged, Rókus"));
+        assertThat(property.getStreet(), is("Zsitva sor"));
+        assertThat(property.getConditionType(), is("felújított"));
         assertThat(property.getBuiltAfter(), is(1981));
         assertThat(property.getBuiltBefore(), is(2000));
         assertThat(property.getSquareMeters(), is(72));
-        assertThat(property.getPanel(), is(true));
     }
 
     @Test
@@ -98,7 +103,6 @@ class TrackingServiceTest {
         var trackingData = trackingDataRepository.findLatestByPropertyId(propertyId).get();
         assertFalse(trackingData.isActive());
         assertThat(trackingData.getProperty().getPropertyId(), is(propertyId));
-        assertNull(trackingData.getProperty().getPanel());
         assertEquals(CURRENT_TIMESTAMP, trackingData.getCreatedAt());
     }
 

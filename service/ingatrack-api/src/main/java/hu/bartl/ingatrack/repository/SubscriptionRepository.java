@@ -19,6 +19,7 @@ import org.apache.commons.text.StringSubstitutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,6 +68,33 @@ public class SubscriptionRepository {
         var resultIterator = result.getValues().iterator();
         return resultIterator.hasNext() ? Optional.of(convertToPropertySubscription(resultIterator.next())) : Optional.empty();
     }
+
+    @SneakyThrows
+    public Optional<PropertySubscription> findPropertySubscriptionById(String subscriptionId) {
+        var resultIterator = loadSubscriptionById(subscriptionId);
+        return resultIterator.hasNext() ? Optional.of(convertToPropertySubscription(resultIterator.next())) : Optional.empty();
+    }
+
+    @SneakyThrows
+    public Optional<SearchSubscription> findSearchSubscriptionById(String subscriptionId) {
+        var resultIterator = loadSubscriptionById(subscriptionId);
+        return resultIterator.hasNext() ? Optional.of(convertToSearchSubscription(resultIterator.next())) : Optional.empty();
+    }
+
+    @SneakyThrows
+    private Iterator<FieldValueList> loadSubscriptionById(String id) {
+        var queryTemplate = "SELECT * FROM `${dataset}.${table}` where ${idColumn} = '${subscriptionId}'";
+        var query = StringSubstitutor.replace(queryTemplate, Map.of(
+                "dataset", bigQueryConfig.getDatasetName(),
+                "table", BigQueryConfig.SubscriptionTable.NAME,
+                "idColumn", Subscription.Fields.id,
+                "subscriptionId", id));
+
+        var result = bigquery.query(QueryJobConfiguration.newBuilder(query).build());
+
+        return result.getValues().iterator();
+    }
+
 
     private PropertySubscription convertToPropertySubscription(FieldValueList subscription) {
         var propertySubscription = new PropertySubscription(subscription.get(PropertySubscription.Fields.propertyId).getLongValue());

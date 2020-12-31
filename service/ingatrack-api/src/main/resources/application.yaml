@@ -5,4 +5,5 @@ spring:
         datasetName: ingatrack
 application:
   datasource-url: https://ingatlan.com
-  do-job-on-start: true
+  do-job-on-start: false
+  request-delay-ms: 200

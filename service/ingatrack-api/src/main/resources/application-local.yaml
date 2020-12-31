@@ -3,5 +3,3 @@ spring:
     gcp:
       bigquery:
         datasetName: ingatrack_test
-application:
-  do-job-on-start: false

@@ -22,6 +22,7 @@ public class TrackingData {
     @Default
     private Property property = Property.builder().build();
     private long price;
+    private String listingType;
     @Default
     private boolean active = false;
     private Timestamp createdAt;
@@ -42,11 +43,15 @@ public class TrackingData {
     public static class Property {
 
         private long propertyId;
+        private String propertyType;
+        private String propertySubType;
+        private String county;
         private String city;
+        private String zone;
+        private String street;
         private Integer squareMeters;
         private Integer builtAfter;
         private Integer builtBefore;
-        @Default
-        private Boolean panel = null;
+        private String conditionType;
     }
 }

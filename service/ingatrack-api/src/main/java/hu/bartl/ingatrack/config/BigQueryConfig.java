@@ -24,19 +24,25 @@ public class BigQueryConfig {
 
     @UtilityClass
     public class TrackingTable {
-        public static final String NAME = "tracking";
-        public static final Schema SCHEMA = Schema.of(
+        public final String NAME = "tracking";
+        public final Schema SCHEMA = Schema.of(
                 Field.of(TrackingData.Fields.id, StandardSQLTypeName.STRING),
                 Field.of(TrackingData.Fields.property, StandardSQLTypeName.STRUCT,
                         Field.of(Property.Fields.propertyId, StandardSQLTypeName.INT64),
+                        Field.of(Property.Fields.propertyType, StandardSQLTypeName.STRING),
+                        Field.of(Property.Fields.propertySubType, StandardSQLTypeName.STRING),
+                        Field.of(Property.Fields.county, StandardSQLTypeName.STRING),
                         Field.of(Property.Fields.city, StandardSQLTypeName.STRING),
+                        Field.of(Property.Fields.zone, StandardSQLTypeName.STRING),
+                        Field.of(Property.Fields.street, StandardSQLTypeName.STRING),
                         Field.of(Property.Fields.squareMeters, StandardSQLTypeName.INT64),
                         Field.of(Property.Fields.builtAfter, StandardSQLTypeName.INT64),
                         Field.of(Property.Fields.builtBefore, StandardSQLTypeName.INT64),
-                        Field.of(Property.Fields.panel, StandardSQLTypeName.BOOL)
+                        Field.of(Property.Fields.conditionType, StandardSQLTypeName.STRING)
                 ),
                 Field.of(TrackingData.Fields.price, StandardSQLTypeName.INT64),
                 Field.of(TrackingData.Fields.active, StandardSQLTypeName.BOOL),
+                Field.of(TrackingData.Fields.listingType, StandardSQLTypeName.STRING),
                 Field.of(TrackingData.Fields.createdAt, StandardSQLTypeName.TIMESTAMP),
                 Field.of(TrackingData.Fields.insertedBy, StandardSQLTypeName.STRING)
         );

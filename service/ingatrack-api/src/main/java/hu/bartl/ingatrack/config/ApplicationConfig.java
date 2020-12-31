@@ -11,4 +11,5 @@ public class ApplicationConfig {
 
     private String datasourceUrl;
     private boolean doJobOnStart;
+    private int requestDelayMs;
 }

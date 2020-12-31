@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -43,6 +44,14 @@ public class SubscriptionService {
         subscription.setActive(false);
         subscriptionRepository.save(subscription);
         log.info("Subscription inactivated {}", subscription);
+    }
+
+    public Optional<PropertySubscription> findPropertySubscription(String subscriptionId) {
+        return subscriptionRepository.findPropertySubscriptionById(subscriptionId);
+    }
+
+    public Optional<SearchSubscription> findSearchSubscription(String subscriptionId) {
+        return subscriptionRepository.findSearchSubscriptionById(subscriptionId);
     }
 
     public List<PropertySubscription> listPropertySubscriptions() {

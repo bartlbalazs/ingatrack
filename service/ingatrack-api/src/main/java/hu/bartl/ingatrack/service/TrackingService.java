@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -51,6 +52,7 @@ public class TrackingService {
     @SneakyThrows
     public TrackingData fetchTrackingData(long propertyId) {
         log.info("Fetching tracking data for property with ID: " + propertyId);
+        TimeUnit.MILLISECONDS.sleep(applicationConfig.getRequestDelayMs());
         var htmlPage = Jsoup.connect(applicationConfig.getDatasourceUrl() + "/" + propertyId).method(GET).ignoreHttpErrors(true).execute();
         if (htmlPage.statusCode() == HttpStatus.OK.value()) {
             String html = new String(htmlPage.bodyAsBytes(), UTF_8.name());
@@ -63,6 +65,7 @@ public class TrackingService {
     @SneakyThrows
     public List<Long> fetchPropertyIds(String query) {
         log.info("Fetching property IDs from query: " + query);
+        TimeUnit.MILLISECONDS.sleep(applicationConfig.getRequestDelayMs());
         List<Long> result = Lists.newArrayList();
 
         var htmlPage = Jsoup.connect(applicationConfig.getDatasourceUrl() + "/lista/" + query + "?page=1").method(GET).execute();

@@ -42,29 +42,38 @@ public class BqInitService {
         var datasetId = DatasetId.of(datasetName);
         var dataset = bigquery.getDataset(datasetId);
         if (dataset == null) {
+            log.info("Creating dataset: " + datasetId);
             bigquery.create(DatasetInfo.newBuilder(datasetId)
                     .setLocation(location)
                     .build());
+        } else {
+            log.info("Dataset already exists: " + datasetId);
         }
     }
 
     private void createTable(String datasetName, String name, Schema schema) {
-        var trackingTableId = TableId.of(datasetName, name);
-        var trackingTable = bigquery.getTable(trackingTableId);
-        if (trackingTable == null) {
+        var tableId = TableId.of(datasetName, name);
+        var table = bigquery.getTable(tableId);
+        if (table == null) {
+            log.info("Creating table: " + tableId);
             bigquery.create(TableInfo.newBuilder(
-                    trackingTableId,
+                    tableId,
                     StandardTableDefinition.of(schema))
                     .build());
+        } else {
+            log.info("Table already exists: " + tableId);
         }
     }
 
     private void createView(String datasetName, String name, String query) {
-        var propertySubscriptionTableId = TableId.of(datasetName, name);
-        var propertySubscriptionTable = bigquery.getTable(propertySubscriptionTableId);
-        if (propertySubscriptionTable == null) {
+        var viewId = TableId.of(datasetName, name);
+        var view = bigquery.getTable(viewId);
+        if (view == null) {
+            log.info("Creating table: " + viewId);
             var viewDefinition = ViewDefinition.newBuilder(query.replace("${dataset}", datasetName)).setUseLegacySql(false).build();
-            bigquery.create(TableInfo.of(propertySubscriptionTableId, viewDefinition));
+            bigquery.create(TableInfo.of(viewId, viewDefinition));
+        } else {
+            log.info("View already exists: " + viewId);
         }
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.InsertAllRequest;
 import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
 import com.google.cloud.bigquery.QueryJobConfiguration;
@@ -87,19 +88,33 @@ public class TrackingDataRepository {
                     .id(trackingDataRow.get(Fields.id).getStringValue())
                     .active(trackingDataRow.get(Fields.active).getBooleanValue())
                     .price(trackingDataRow.get(Fields.price).getLongValue())
+                    .listingType(getNullableString(trackingDataRow, Fields.listingType))
                     .createdAt(Timestamp.ofTimeMicroseconds(trackingDataRow.get(Fields.createdAt).getTimestampValue()))
                     .property(Property.builder()
                             .propertyId(propertyRow.get(Property.Fields.propertyId).getLongValue())
-                            .city(!propertyRow.get(Property.Fields.city).isNull() ? propertyRow.get(Property.Fields.city).getStringValue() : null)
-                            .builtAfter(!propertyRow.get(Property.Fields.builtAfter).isNull() ? Math.toIntExact(propertyRow.get(Property.Fields.builtAfter).getLongValue()) : null)
-                            .builtBefore(!propertyRow.get(Property.Fields.builtBefore).isNull() ? Math.toIntExact(propertyRow.get(Property.Fields.builtBefore).getLongValue()) : null)
-                            .squareMeters(!propertyRow.get(Property.Fields.squareMeters).isNull() ? Math.toIntExact(propertyRow.get(Property.Fields.squareMeters).getLongValue()) : null)
-                            .panel(!propertyRow.get(Property.Fields.panel).isNull() ? propertyRow.get(Property.Fields.panel).getBooleanValue() : null)
+                            .propertyType(getNullableString(propertyRow, Property.Fields.propertyType))
+                            .propertySubType(getNullableString(propertyRow, Property.Fields.propertySubType))
+                            .county(getNullableString(propertyRow, Property.Fields.county))
+                            .city(getNullableString(propertyRow, Property.Fields.city))
+                            .zone(getNullableString(propertyRow, Property.Fields.zone))
+                            .street(getNullableString(propertyRow, Property.Fields.street))
+                            .builtAfter(getNullableInt(propertyRow, Property.Fields.builtAfter))
+                            .conditionType(getNullableString(propertyRow,Property.Fields.conditionType))
+                            .builtBefore(getNullableInt(propertyRow, Property.Fields.builtBefore))
+                            .squareMeters(getNullableInt(propertyRow, Property.Fields.squareMeters))
                             .build())
                     .build();
             return Optional.of(trackingData);
         } else {
             return Optional.empty();
         }
+    }
+
+    private String getNullableString(FieldValueList propertyRow, String fieldName) {
+        return !propertyRow.get(fieldName).isNull() ? propertyRow.get(fieldName).getStringValue() : null;
+    }
+
+    private Integer getNullableInt(FieldValueList propertyRow, String fieldName) {
+        return !propertyRow.get(fieldName).isNull() ? Math.toIntExact(propertyRow.get(fieldName).getLongValue()) : null;
     }
 }

@@ -25,29 +25,26 @@ public class HtmlPageParser {
     private final DateProvider dateProvider;
 
     public TrackingData parsePropertyPage(long propertyId, String propertyPageHtml) {
-        var trackingData = TrackingData.create(propertyId, dateProvider.now());
         var propertyPage = Jsoup.parse(propertyPageHtml);
+        var dataLayer = getDataLayer(propertyPage);
+        var trackingData = TrackingData.create(propertyId, dateProvider.now());
+        trackingData.setListingType(String.valueOf(dataLayer.get("listingType")));
 
         var property = trackingData.getProperty();
-        property.setCity(getCity(propertyPage));
-        property.setSquareMeters(getSquareMeters(propertyPage));
+        property.setPropertyType(String.valueOf(dataLayer.get("propertyType")));
+        property.setPropertySubType(String.valueOf(dataLayer.get("propertySubType")));
+        property.setCounty(String.valueOf(dataLayer.get("county")));
+        property.setCity(String.valueOf(dataLayer.get("city")));
+        property.setZone(String.valueOf(dataLayer.get("zone")));
+        property.setStreet(String.valueOf(dataLayer.get("street")));
+        property.setConditionType(String.valueOf(dataLayer.get("conditionType")));
+        property.setSquareMeters(Integer.parseInt(String.valueOf(dataLayer.get("area"))));
         property.setBuiltAfter(getBuiltAfter(propertyPage));
         property.setBuiltBefore(getBuiltBefore(propertyPage));
-        property.setPanel(isPanel(propertyPage));
 
         trackingData.setPrice(getPrice(propertyPage));
         trackingData.setActive(true);
         return trackingData;
-    }
-
-    private String getCity(Document propertyPage) {
-        var title = propertyPage.getElementsByClass("js-listing-title").first();
-        return title.ownText().split(",")[0];
-    }
-
-    private int getSquareMeters(Document propertyPage) {
-        var squareFootage = propertyPage.getElementsByClass("parameter parameter-area-size").first().child(1);
-        return Integer.parseInt(squareFootage.ownText().split(" ")[0]);
     }
 
     private Integer getBuiltAfter(Document propertyPage) {
@@ -68,10 +65,6 @@ public class HtmlPageParser {
         return yearsOfBuilt.contains("-") ? Integer.valueOf(yearsOfBuilt.split("-")[order]) : Integer.valueOf(yearsOfBuilt);
     }
 
-    private boolean isPanel(Document propertyPage) {
-        return propertyPage.select("h2.card-title").first().text().contains("panel");
-    }
-
     private int getPrice(Document propertyPage) {
         var squareMeters = propertyPage.getElementsByClass("parameter parameter-price").first().child(1);
         float priceInMillions = Float.parseFloat(squareMeters.ownText().replace(",", ".").split(" ")[0]);
@@ -81,14 +74,19 @@ public class HtmlPageParser {
     @SneakyThrows
     public PageResult parseSearchPage(String htmlPage) {
         var searchPage = Jsoup.parse(htmlPage);
-        var dataLayerScript = searchPage.getElementsByTag("script").get(2).data().trim();
-        var dataLayerJson = dataLayerScript.substring("dataLayer.push(".length(), dataLayerScript.length() - ");".length());
-        var dataLayer = objectMapper.readValue(dataLayerJson, Map.class);
+        var dataLayer = getDataLayer(searchPage);
         return PageResult.builder()
                 .properties(((List<Integer>) dataLayer.get("itemId")).stream().map(Long::valueOf).collect(Collectors.toList()))
                 .hasNext(Integer.parseInt(dataLayer.get("numberOfItems").toString()) == DEFAULT_PAGE_SIZE)
                 .nextPage(Integer.parseInt(dataLayer.get("page").toString()) + 1)
                 .build();
+    }
+
+    @SneakyThrows
+    private Map<String, Object> getDataLayer(Document page) {
+        var dataLayerScript = page.getElementsByTag("script").get(2).data().trim();
+        var dataLayerJson = dataLayerScript.substring("dataLayer.push(".length(), dataLayerScript.length() - ");".length());
+        return objectMapper.readValue(dataLayerJson, Map.class);
     }
 
     @Data
