@@ -84,7 +84,7 @@ public class HtmlPageParser {
 
     @SneakyThrows
     private Map<String, Object> getDataLayer(Document page) {
-        var dataLayerScript = page.getElementsByTag("script").get(2).data().trim();
+        var dataLayerScript = page.getElementsByTag("script").get(3).data().trim();
         var dataLayerJson = dataLayerScript.substring("dataLayer.push(".length(), dataLayerScript.length() - ");".length());
         return objectMapper.readValue(dataLayerJson, Map.class);
     }
