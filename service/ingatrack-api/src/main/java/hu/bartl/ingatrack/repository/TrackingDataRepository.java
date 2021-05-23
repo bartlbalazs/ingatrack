@@ -53,6 +53,11 @@ public class TrackingDataRepository {
     public void save(List<TrackingData> trackingData) {
         log.info("Storing tracking data to BigQuery: {}", trackingData);
 
+        if (trackingData.isEmpty()) {
+            log.warn("Tracking data is empty.");
+            return;
+        }
+
         var rowsToInsert = trackingData.stream()
                 .map(this::convertToMap)
                 .map(RowToInsert::of)
