@@ -44,9 +44,10 @@ public class TrackingService {
         var trackingData = fetchPropertyIds(query)
                 .stream()
                 .map(this::fetchTrackingData)
+                .map(t -> t.toBuilder().insertedBy(requestSource).build())
                 .collect(Collectors.toList());
-        trackingData.forEach(t -> t.setInsertedBy(requestSource));
         trackingDataRepository.save(trackingData);
+        log.info("Tracking query " + query + " finished.");
     }
 
     @SneakyThrows
