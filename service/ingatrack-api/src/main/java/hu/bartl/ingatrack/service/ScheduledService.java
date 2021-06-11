@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ScheduledService {
 
-    private static final int PERIOD_LENGTH_IN_MINUTES = 8;
+    private static final int WORK_LENGTH_IN_MINUTES = 5;
+    private static final int WAIT_LENGTH_IN_MINUTES = 15;
 
     private final ApplicationConfig applicationConfig;
     private final SubscriptionService subscriptionService;
@@ -44,19 +45,19 @@ public class ScheduledService {
                 .forEach(s -> trackingService.trackProperty(s.getPropertyId(), s.getId()));
 
         subscriptionService.listPropertySubscriptions()
-                .forEach(s -> doIntermittentTracking(() -> trackingService.trackProperty(s.getPropertyId(), s.getId()), PERIOD_LENGTH_IN_MINUTES, stopwatch));
+                .forEach(s -> doIntermittentTracking(() -> trackingService.trackProperty(s.getPropertyId(), s.getId()), WORK_LENGTH_IN_MINUTES, WAIT_LENGTH_IN_MINUTES, stopwatch));
 
         log.info("Tracking properties by search subscription");
         subscriptionService.listSearchSubscriptions()
-                .forEach(s -> doIntermittentTracking(() -> trackingService.trackSearch(s.getQuery(), s.getId()), PERIOD_LENGTH_IN_MINUTES, stopwatch));
+                .forEach(s -> doIntermittentTracking(() -> trackingService.trackSearch(s.getQuery(), s.getId()), WORK_LENGTH_IN_MINUTES, WAIT_LENGTH_IN_MINUTES, stopwatch));
         log.info("Scheduled subscription tracking finished.");
     }
 
     @SneakyThrows
-    private void doIntermittentTracking(Runnable trackingMethod, int periodLengthInMinutes, Stopwatch stopwatch) {
-        if (stopwatch.elapsed(TimeUnit.MINUTES) > periodLengthInMinutes) {
-            log.info("Maximum consecutive work time exceeded. Wait for " + periodLengthInMinutes + " minutes.");
-            Thread.sleep(periodLengthInMinutes * 1000 * 60);
+    private void doIntermittentTracking(Runnable trackingMethod, int workPeriodLengthInMinutes, int waitPeriodLengthInMinutes, Stopwatch stopwatch) {
+        if (stopwatch.elapsed(TimeUnit.MINUTES) > workPeriodLengthInMinutes) {
+            log.info("Maximum consecutive work time exceeded. Wait for " + waitPeriodLengthInMinutes + " minutes.");
+            Thread.sleep(waitPeriodLengthInMinutes * 1000 * 60);
             stopwatch.reset();
             stopwatch.start();
         }
