@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class ScheduledService {
 
     private static final int WORK_LENGTH_IN_MINUTES = 5;
-    private static final int WAIT_LENGTH_IN_MINUTES = 15;
+    private static final int WAIT_LENGTH_IN_MINUTES = 10;
 
     private final ApplicationConfig applicationConfig;
     private final SubscriptionService subscriptionService;

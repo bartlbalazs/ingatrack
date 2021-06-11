@@ -11,6 +11,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.springframework.http.HttpStatus;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,6 +53,7 @@ public class TrackingService {
     }
 
     @SneakyThrows
+    @Retryable(value = org.jsoup.HttpStatusException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000 * 180, multiplier = 2))
     public TrackingData fetchTrackingData(long propertyId) {
         log.info("Fetching tracking data for property with ID: " + propertyId);
         TimeUnit.MILLISECONDS.sleep(applicationConfig.getRequestDelayMs());
@@ -64,6 +67,7 @@ public class TrackingService {
     }
 
     @SneakyThrows
+    @Retryable(value = org.jsoup.HttpStatusException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000 * 180, multiplier = 2))
     public List<Long> fetchPropertyIds(String query) {
         log.info("Fetching property IDs from query: " + query);
         TimeUnit.MILLISECONDS.sleep(applicationConfig.getRequestDelayMs());
