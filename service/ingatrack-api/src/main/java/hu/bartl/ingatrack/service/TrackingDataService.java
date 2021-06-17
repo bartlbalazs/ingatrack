@@ -30,7 +30,7 @@ public class TrackingDataService {
     private final DateProvider dateProvider;
 
     @SneakyThrows
-    @Retryable(value = org.jsoup.HttpStatusException.class, maxAttempts = 15, backoff = @Backoff(delay = 1000 * 180, multiplier = 2, maxDelay = 1000* 180 * 2))
+    @Retryable(value = {org.jsoup.HttpStatusException.class, java.net.ConnectException.class}, maxAttempts = 15, backoff = @Backoff(delay = 1000 * 180, multiplier = 2, maxDelay = 1000 * 180 * 2))
     public TrackingData fetchTrackingData(long propertyId) {
         log.info("Fetching tracking data for property with ID: " + propertyId);
         TimeUnit.MILLISECONDS.sleep(applicationConfig.getRequestDelayMs());
@@ -44,7 +44,7 @@ public class TrackingDataService {
     }
 
     @SneakyThrows
-    @Retryable(value = org.jsoup.HttpStatusException.class, maxAttempts = 15, backoff = @Backoff(delay = 1000 * 180, multiplier = 2, maxDelay = 1000* 180 * 2))
+    @Retryable(value = {org.jsoup.HttpStatusException.class, java.net.ConnectException.class}, maxAttempts = 15, backoff = @Backoff(delay = 1000 * 180, multiplier = 2, maxDelay = 1000 * 180 * 2))
     public List<Long> fetchPropertyIds(String query) {
         log.info("Fetching property IDs from query: " + query);
         TimeUnit.MILLISECONDS.sleep(applicationConfig.getRequestDelayMs());
