@@ -42,7 +42,7 @@ public class HtmlPageParser {
         property.setBuiltAfter(getBuiltAfter(propertyPage));
         property.setBuiltBefore(getBuiltBefore(propertyPage));
 
-        trackingData.setPrice(getPrice(propertyPage));
+        trackingData.setPrice(trackingData.getListingType().equals("Eladó") ? getBuyPrice(propertyPage) : getRentPrice(propertyPage));
         trackingData.setActive(true);
         return trackingData;
     }
@@ -65,12 +65,19 @@ public class HtmlPageParser {
         return yearsOfBuilt.contains("-") ? Integer.valueOf(yearsOfBuilt.split("-")[order]) : Integer.valueOf(yearsOfBuilt);
     }
 
-    private int getPrice(Document propertyPage) {
+    private int getBuyPrice(Document propertyPage) {
         var price = propertyPage.getElementsByClass("parameters").first()
                 .child(0).getElementsByTag("div").get(1)
                 .getElementsByTag("span").first();
         float priceInMillions = Float.parseFloat(price.ownText().replace(",", ".").split(" ")[0]);
         return Math.round(priceInMillions * 1000000);
+    }
+
+    private int getRentPrice(Document propertyPage) {
+        var price = propertyPage.getElementsByClass("parameters").first().getElementsByTag("div").get(1)
+                .getElementsByClass("parameterValues").first().getElementsByTag("span").first()
+                .ownText();
+        return Math.round(Float.parseFloat(price.substring(0, price.indexOf(" ")).replace(",",".")) * 1000);
     }
 
     @SneakyThrows

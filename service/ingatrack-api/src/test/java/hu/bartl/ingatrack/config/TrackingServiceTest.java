@@ -89,6 +89,31 @@ class TrackingServiceTest {
 
     @Test
     @SneakyThrows
+    void shouldTrackPropertyForRentWithActiveAdvertisement() {
+        var propertyId = 23778830L;
+
+        prepareMockServerForProperty(propertyId, HttpStatusCode.OK_200);
+
+        underTest.trackProperty(propertyId, REQUEST_SOURCE);
+
+        var trackingData = trackingDataRepository.findLatestByPropertyId(propertyId).get();
+        assertTrue(trackingData.isActive());
+        assertThat(trackingData.getListingType(), is("Kiadó"));
+        assertThat(trackingData.getCreatedAt(), is(CURRENT_TIMESTAMP));
+
+        var property = trackingData.getProperty();
+        assertThat(property.getPropertyId(), is(propertyId));
+        assertThat(property.getPropertyType(), is("lakás"));
+        assertThat(property.getPropertySubType(), is("tégla"));
+        assertThat(property.getCounty(), is("Győr-Moson-Sopron"));
+        assertThat(property.getCity(), is("Győr"));
+        assertThat(property.getStreet(), is("Liszt Ferenc utca"));
+        assertThat(property.getConditionType(), is("újszerű"));
+        assertThat(property.getSquareMeters(), is(44));
+    }
+
+    @Test
+    @SneakyThrows
     void shouldTrackPropertyWithInactiveAdvertisement() {
         var propertyId = 22619523L;
 
