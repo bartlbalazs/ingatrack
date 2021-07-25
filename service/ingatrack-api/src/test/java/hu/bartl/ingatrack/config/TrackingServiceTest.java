@@ -66,7 +66,7 @@ class TrackingServiceTest {
     @Test
     @SneakyThrows
     void shouldTrackPropertyWithActiveAdvertisement() {
-        var propertyId = 30977395L;
+        var propertyId = 32341262L;
 
         prepareMockServerForProperty(propertyId, HttpStatusCode.OK_200);
 
@@ -79,22 +79,18 @@ class TrackingServiceTest {
 
         var property = trackingData.getProperty();
         assertThat(property.getPropertyId(), is(propertyId));
-        assertThat(property.getPropertyType(), is("lakás"));
-        assertThat(property.getPropertySubType(), is("panel"));
-        assertThat(property.getCounty(), is("Csongrád"));
-        assertThat(property.getCity(), is("Szeged"));
-        assertThat(property.getZone(), is("Szeged, Rókus"));
-        assertThat(property.getStreet(), is("Zsitva sor"));
-        assertThat(property.getConditionType(), is("felújított"));
-        assertThat(property.getBuiltAfter(), is(1981));
-        assertThat(property.getBuiltBefore(), is(2000));
-        assertThat(property.getSquareMeters(), is(72));
+        assertThat(property.getPropertyType(), is("ház"));
+        assertThat(property.getPropertySubType(), is("családi ház"));
+        assertThat(property.getCounty(), is("Pest"));
+        assertThat(property.getCity(), is("Sződliget"));
+        assertThat(property.getStreet(), is("Tompa utca"));
+        assertThat(property.getSquareMeters(), is(57));
     }
 
     @Test
     @SneakyThrows
     void shouldTrackPropertyWithInactiveAdvertisement() {
-        var propertyId = 318110356L;
+        var propertyId = 22619523L;
 
         prepareMockServerForProperty(propertyId, HttpStatusCode.NOT_FOUND_404);
 
@@ -114,17 +110,17 @@ class TrackingServiceTest {
         prepareMockServerForSearch(query, 1);
         prepareMockServerForSearch(query, 2);
 
-        prepareMockServerForProperty(22399987, HttpStatusCode.OK_200);
-        prepareMockServerForProperty(31551453, HttpStatusCode.OK_200);
-        prepareMockServerForProperty(31850378, HttpStatusCode.OK_200);
+        prepareMockServerForProperty(22619523, HttpStatusCode.OK_200);
+        prepareMockServerForProperty(32297628, HttpStatusCode.OK_200);
+        prepareMockServerForProperty(32341262, HttpStatusCode.OK_200);
 
         underTest.trackSearch(query, "TEST");
 
-        var t1 = trackingDataRepository.findLatestByPropertyId(22399987).get();
+        var t1 = trackingDataRepository.findLatestByPropertyId(22619523).get();
         assertEquals(CURRENT_TIMESTAMP, t1.getCreatedAt());
-        var t2 = trackingDataRepository.findLatestByPropertyId(31551453).get();
+        var t2 = trackingDataRepository.findLatestByPropertyId(32297628).get();
         assertEquals(CURRENT_TIMESTAMP, t2.getCreatedAt());
-        var t3 = trackingDataRepository.findLatestByPropertyId(31850378).get();
+        var t3 = trackingDataRepository.findLatestByPropertyId(32341262).get();
         assertEquals(CURRENT_TIMESTAMP, t3.getCreatedAt());
     }
 

@@ -66,15 +66,17 @@ public class HtmlPageParser {
     }
 
     private int getPrice(Document propertyPage) {
-        var squareMeters = propertyPage.getElementsByClass("parameter parameter-price").first().child(1);
-        float priceInMillions = Float.parseFloat(squareMeters.ownText().replace(",", ".").split(" ")[0]);
+        var price = propertyPage.getElementsByClass("parameters").first()
+                .child(0).getElementsByTag("div").get(1)
+                .getElementsByTag("span").first();
+        float priceInMillions = Float.parseFloat(price.ownText().replace(",", ".").split(" ")[0]);
         return Math.round(priceInMillions * 1000000);
     }
 
     @SneakyThrows
     public PageResult parseSearchPage(String htmlPage) {
         var searchPage = Jsoup.parse(htmlPage);
-        var dataLayer = getDataLayer(searchPage);
+        var dataLayer = getLegacyDataLayer(searchPage);
         return PageResult.builder()
                 .properties(((List<Integer>) dataLayer.get("itemId")).stream().map(Long::valueOf).collect(Collectors.toList()))
                 .hasNext(Integer.parseInt(dataLayer.get("numberOfItems").toString()) == DEFAULT_PAGE_SIZE)
@@ -84,6 +86,17 @@ public class HtmlPageParser {
 
     @SneakyThrows
     private Map<String, Object> getDataLayer(Document page) {
+        var dataLayerScriptElement = page.getElementsByTag("script").stream()
+                .filter(s -> s.data().trim().startsWith("window['dataLayer']=["))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Data layer script tag not found!"));
+        var dataLayerScript = dataLayerScriptElement.data().trim();
+        var dataLayerJson = dataLayerScript.substring("window['dataLayer']=[".length(), dataLayerScript.indexOf("];if("));
+        return objectMapper.readValue(dataLayerJson, Map.class);
+    }
+
+    @SneakyThrows
+    private Map<String, Object> getLegacyDataLayer(Document page) {
         var dataLayerScriptElement = page.getElementsByTag("script").stream()
                 .filter(s -> s.data().trim().startsWith("dataLayer.push("))
                 .findFirst()
